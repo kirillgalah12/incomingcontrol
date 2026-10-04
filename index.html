@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>Входной контроль платформ</title>
+<script src="docx.lib.js"></script>
+<style>
+  :root{
+    --accent:#2b5fb8; --bg:#f5f6f8; --card:#fff; --border:#dfe3ea; --text:#1f2430; --muted:#6b7280;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;font-family:-apple-system,Segoe UI,Roboto,Arial,sans-serif;background:var(--bg);color:var(--text);
+    padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);}
+  .wrap{max-width:560px;margin:0 auto;padding:16px 16px 60px;}
+  .topbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;}
+  .topbar .title{font-weight:700;font-size:17px;}
+  .icon-btn{background:none;border:none;font-size:22px;cursor:pointer;color:var(--text);}
+  .menu-panel{position:absolute;right:16px;top:50px;background:var(--card);border:1px solid var(--border);
+    border-radius:10px;box-shadow:0 6px 20px rgba(0,0,0,.12);overflow:hidden;z-index:10;}
+  .menu-item{display:block;width:100%;text-align:left;padding:12px 16px;border:none;background:none;font-size:14px;cursor:pointer;}
+  .menu-item:hover{background:#f2f4f7;}
+  .hidden{display:none !important;}
+  .act-progress{background:#eef2fb;color:var(--accent);padding:8px 12px;border-radius:8px;font-size:13px;margin-bottom:14px;}
+  .screen{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:18px 16px;margin-bottom:16px;}
+  h2{font-size:18px;margin:0 0 10px;}
+  h3{font-size:14px;margin:16px 0 8px;color:var(--muted);}
+  .hint{color:var(--muted);font-size:13px;margin:0 0 12px;}
+  .field{display:flex;flex-direction:column;gap:4px;margin-bottom:10px;}
+  .field label{font-size:12px;color:var(--muted);}
+  input,textarea{font-size:15px;padding:10px 12px;border:1px solid var(--border);border-radius:8px;font-family:inherit;color:var(--text);width:100%;}
+  textarea{resize:vertical;min-height:44px;}
+  .big-input{font-size:20px;padding:14px;text-align:center;margin-bottom:14px;}
+  .btn-primary{display:block;width:100%;background:var(--accent);color:#fff;border:none;border-radius:10px;
+    padding:14px;font-size:15px;font-weight:600;cursor:pointer;margin-top:10px;}
+  .btn-primary.outline{background:#fff;color:var(--accent);border:2px solid var(--accent);}
+  .btn-outline.small{display:inline-block;width:auto;background:#eef1f6;color:var(--text);border:none;border-radius:8px;
+    padding:8px 12px;font-size:13px;cursor:pointer;margin-top:6px;}
+  .btn-text{display:block;width:100%;text-align:center;background:none;border:none;color:var(--muted);
+    padding:10px;font-size:14px;cursor:pointer;}
+  .member-row{display:grid;grid-template-columns:1fr 1fr auto;gap:8px;align-items:end;margin-bottom:8px;}
+  .btn-danger{background:#fde8e8;color:#b42318;border:none;border-radius:6px;padding:8px;cursor:pointer;font-size:12px;height:40px;}
+  .defect-row{border-bottom:1px dashed var(--border);padding:10px 0;}
+  .defect-row label{display:flex;gap:8px;align-items:flex-start;font-size:14px;font-weight:500;cursor:pointer;}
+  .defect-row textarea{margin-top:8px;display:none;}
+  .defect-row.checked textarea{display:block;}
+  .photo-item{border-bottom:1px dashed var(--border);padding:10px 0;}
+  .photo-item .dtext{font-size:13px;margin-bottom:6px;}
+  .photo-item input[type=file]{font-size:13px;}
+  .modules-summary{margin:10px 0;}
+  .module-chip{background:#eef2fb;border-radius:8px;padding:8px 10px;font-size:13px;margin-bottom:6px;}
+  .acts-row{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--border);}
+  .status-msg{font-size:12px;color:var(--muted);margin-top:6px;min-height:16px;}
+  .ok{color:#15803d;} .err{color:#b42318;}
+  .comp-group{border:1px solid var(--border);border-radius:10px;padding:10px 12px;margin-bottom:12px;background:#fafbfc;}
+  .comp-group h3{margin:0 0 8px;color:var(--text);}
+  .comp-group .compNumbers{margin-top:4px;}
+  .gate{position:fixed;inset:0;background:var(--bg);display:flex;align-items:center;justify-content:center;z-index:100;padding:20px;}
+  .gate-box{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:28px 22px;max-width:320px;width:100%;text-align:center;}
+  .gate-box h2{margin:0 0 6px;font-size:18px;}
+  .gate-box p{color:var(--muted);font-size:13px;margin:0 0 16px;}
+  .gate-box input{text-align:center;font-size:18px;letter-spacing:2px;margin-bottom:10px;}
+  .gate-err{color:#b42318;font-size:13px;min-height:18px;margin-top:6px;}
+</style>
+</head>
+<body>
+
+<div id="gate" class="gate">
+  <div class="gate-box">
+    <h2>Входной контроль платформ</h2>
+    <p>Введите пароль для доступа к форме</p>
+    <input id="gatePwd" type="password" inputmode="numeric" placeholder="Пароль" autocomplete="off" />
+    <button class="btn-primary" id="gateBtn">Войти</button>
+    <div id="gateErr" class="gate-err"></div>
+  </div>
+</div>
+
+<div class="wrap hidden" id="appWrap">
+
+  <header class="topbar">
+    <div class="title">Входной контроль платформ</div>
+    <button id="menuBtn" class="icon-btn">⋮</button>
+  </header>
+  <div id="menuPanel" class="menu-panel hidden">
+    <button class="menu-item" id="editSettingsBtn">Настройки акта / таблицы</button>
+    <button class="menu-item" id="newActBtn">Начать новый акт</button>
+  </div>
+
+  <div id="actProgress" class="act-progress hidden">
+    Акт № <span id="progActNumber"></span> · телег записано: <span id="progCount">0</span>
+  </div>
+
+  <!-- SETTINGS -->
+  <section id="screen-settings" class="screen">
+    <h2>Настройки</h2>
+
+    <div class="field"><label>Номер акта</label><input id="actNumber" placeholder="8406-БНТС-10" /></div>
+    <div class="field"><label>Ожидаемое количество платформ</label><input id="platformsCount" type="number" placeholder="18" /></div>
+    <div class="field"><label>Договор / основание</label><input id="contractInfo" placeholder="договору №1/14.10-2024г. от 4 августа 2026г." /></div>
+
+    <h3>Утверждающий</h3>
+    <div class="field"><label>Должность</label><input id="approverPosition" placeholder="Начальник ОТК" /></div>
+    <div class="field"><label>Организация</label><input id="approverOrg" placeholder="АО «НИИВС Спектр»" /></div>
+    <div class="field"><label>ФИО</label><input id="approverName" placeholder="А.В. Голубев" /></div>
+
+    <h3>Комиссия</h3>
+    <div class="field">
+      <label>Председатель</label>
+      <select id="chairPicker"></select>
+    </div>
+    <div class="field"><label>Председатель — должность (можно поправить)</label><input id="chairRole" placeholder="специалист ОТК" /></div>
+    <div class="field"><label>Председатель — ФИО</label><input id="chairName" placeholder="Галах К.А." /></div>
+
+    <div id="membersBox"></div>
+    <div class="field">
+      <label>Добавить члена комиссии из списка</label>
+      <select id="memberPicker"></select>
+    </div>
+    <button type="button" class="btn-outline small" id="addMemberBtn">+ Новый человек (вписать вручную)</button>
+
+    <h3>ФИО проверяющего (для журнала)</h3>
+    <div class="field"><input id="inspectorName" placeholder="Алещенко А.В." /></div>
+
+    <h3>Google Таблица (необязательно)</h3>
+    <p class="hint">Вставьте сюда ссылку Web App из Google Apps Script — тогда каждая записанная телега
+      сразу будет уходить строкой в таблицу. Инструкция — в SETUP.md рядом с этим файлом.</p>
+    <div class="field"><input id="sheetUrl" placeholder="https://script.google.com/macros/s/.../exec" /></div>
+    <div id="sheetStatus" class="status-msg"></div>
+
+    <button class="btn-primary big" id="startBtn">Сохранить и начать заполнение телег →</button>
+  </section>
+
+  <!-- MODULE NUMBER -->
+  <section id="screen-module" class="screen hidden">
+    <h2>Номер телеги</h2>
+    <p class="hint">Заводской номер гусеничного модуля / платформы</p>
+    <input id="moduleNumber" class="big-input" placeholder="500001111" inputmode="numeric" />
+    <button class="btn-primary" id="toComponentsBtn">Далее — составные части →</button>
+  </section>
+
+  <!-- COMPONENTS (for the journal / sheet) -->
+  <section id="screen-components" class="screen hidden">
+    <h2>Составные части — телега №<span id="compModuleNumber"></span></h2>
+    <p class="hint">Для каждого узла — сколько штук и номер каждого. Если узел не проверяете — оставьте «0».</p>
+
+    <div class="comp-group" data-comp="motor">
+      <h3>Электромотор QS138</h3>
+      <div class="field"><label>Количество, шт</label><input type="number" min="0" class="compQty" value="0" /></div>
+      <div class="compNumbers"></div>
+    </div>
+
+    <div class="field"><label>Диаметр вала (мм)</label><input id="cShaft" /></div>
+
+    <div class="comp-group" data-comp="reducer">
+      <h3>Редуктор</h3>
+      <div class="field"><label>Количество, шт</label><input type="number" min="0" class="compQty" value="0" /></div>
+      <div class="compNumbers"></div>
+    </div>
+
+    <div class="comp-group" data-comp="winch">
+      <h3>Лебёдка FENIX 2500 / Novawinch</h3>
+      <div class="field"><label>Количество, шт</label><input type="number" min="0" class="compQty" value="0" /></div>
+      <div class="compNumbers"></div>
+    </div>
+
+    <div class="comp-group" data-comp="andersen">
+      <h3>Электробатарея Andersen SB120A-600V</h3>
+      <div class="field"><label>Количество, шт</label><input type="number" min="0" class="compQty" value="0" /></div>
+      <div class="compNumbers"></div>
+    </div>
+
+    <button class="btn-primary" id="toDefectsBtn">Далее — несоответствия →</button>
+    <button class="btn-text" id="backToModuleBtn">← Назад</button>
+  </section>
+
+  <!-- DEFECTS -->
+  <section id="screen-defects" class="screen hidden">
+    <h2>Несоответствия — телега №<span id="defModuleNumber"></span></h2>
+    <p class="hint">Отметьте, что обнаружено. Текст можно отредактировать (например, вписать зав. номера).</p>
+    <div id="defectsCatalog"></div>
+    <button class="btn-primary" id="toPhotosBtn">Далее — фото →</button>
+    <button class="btn-text" id="backToComponentsBtn">← Назад</button>
+  </section>
+
+  <!-- PHOTOS -->
+  <section id="screen-photos" class="screen hidden">
+    <h2>Фото несоответствий</h2>
+    <p class="hint">Телега №<span id="photoModuleNumber"></span> — по желанию приложите фото к каждому пункту</p>
+    <div id="photosList"></div>
+    <button class="btn-primary" id="saveModuleBtn">Сохранить телегу</button>
+    <button class="btn-text" id="backToDefectsBtn">← Назад</button>
+  </section>
+
+  <!-- SAVED -->
+  <section id="screen-saved" class="screen hidden">
+    <h2>Телега №<span id="savedModuleNumber"></span> сохранена ✓</h2>
+    <div id="sheetRowStatus" class="status-msg"></div>
+    <div class="modules-summary" id="modulesSummary"></div>
+    <button class="btn-primary" id="continueBtn">Продолжить — следующая телега →</button>
+    <button class="btn-primary outline" id="finishBtn">Сформировать акт (.docx)</button>
+  </section>
+
+</div>
+<script src="app.js"></script>
+</body>
+</html>
